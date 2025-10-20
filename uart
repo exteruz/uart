@@ -1,0 +1,65 @@
+module uart_tx(
+
+   input       clk,
+   input       [7:0] data,
+   input       init_tx, 
+   output   reg  serial_data,
+   output done
+
+);
+
+parameter wait_ = 4'b0000;
+parameter start = 4'b0001;
+parameter count = 4'b0100;
+parameter transmition = 4'b0011;
+parameter parity = 4'b0111;
+parameter finish = 4'b1000;
+parameter bit_rate =13020;
+
+reg data_copy;
+reg [2:0] state, next_state;
+reg [3:0] index;
+reg [16:0] count_internal;
+reg parity_complete;
+
+always @(*) begin
+
+if(init_tx) begin 
+  case(state)
+          wait_:   next_state = start;
+          start : next_state = count;
+
+          
+          count : begin 
+          if ((count_internal == bit_rate) && !parity_complete) begin
+  next_state = transmition;end
+   
+else if (parity_complete) begin
+
+  next_state = parity;
+end else if (!(count_internal == bit_rate) && !parity_complete) begin
+
+  next_state = count;
+end
+
+          
+          end
+          
+          transmition: next_state = (index == 3'b111) ? parity : count;
+          parity: next_state = count;
+          
+         
+
+            default:next_state = start;
+        endcase
+end
+end
+
+
+
+
+
+
+
+
+endmodule
